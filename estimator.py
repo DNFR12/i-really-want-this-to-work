@@ -1,34 +1,44 @@
 import pandas as pd
-from utils import load_and_clean_data, filter_data_for_quote
-from map_utils import generate_map
+from utils import load_all_data, clean_currency
+from geopy.distance import geodesic
 
-DATA = load_and_clean_data("data/")
+DATA = load_all_data()
 
-print("Loaded Columns:", DATA.columns.tolist())
-
-def get_types():
+def get_shipment_types():
     return ["OTR Bulk", "Iso Tank Bulk", "Containers Freight", "LTL & FTL"]
 
-def get_origins():
-    return sorted(DATA["Origin"].dropna().unique())
+def get_known_destinations():
+    if "Destination" in DATA.columns:
+        return sorted(DATA["Destination"].dropna().unique())
+    return []
 
-def get_destinations():
-    return sorted(DATA["Destination"].dropna().unique())
+def estimate_freight(shipment_type, origin, destination):
+    df = DATA[
+        (DATA["Type"] == shipment_type)
+        & (DATA["Origin"] == origin)
+        & (DATA["Destination"] == destination)
+    ]
 
-def calculate_quote(shipment_type, origin, destination):
-    df = filter_data_for_quote(DATA, shipment_type, origin, destination)
     if df.empty:
-        return None
-    return round(df["TOTAL"].mean(), 2)
+        return {
+            "error": "No matching lane found.",
+            "shipment_type": shipment_type
+        }
 
-def create_route_map(origin, destination, shipment_type):
-    df = filter_data_for_quote(DATA, shipment_type, origin, destination)
-    if df.empty:
-        return None
+    total_values = df["Total"].apply(clean_currency)
+    avg_total = round(total_values.mean(), 2)
 
-    row = df.iloc[0]
-    origin_coords = (row["Origin Latitude"], row["Origin Longitude"])
-    dest_coords = (row["Destination Latitude"], row["Destination Longitude"])
+    first_row = df.iloc[0]
+    origin_coords = (first_row["Origin Latitude"], first_row["Origin Longitude"])
+    dest_coords = (first_row["Destination Latitude"], first_row["Destination Longitude"])
+    distance = round(geodesic(origin_coords, dest_coords).miles, 2)
 
-    return generate_map(origin_coords, dest_coords, shipment_type)
-
+    return {
+        "origin": origin,
+        "destination": destination,
+        "shipment_type": shipment_type,
+        "quote": avg_total,
+        "distance": distance,
+        "origin_coords": origin_coords,
+        "dest_coords": dest_coords
+    }
