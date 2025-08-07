@@ -2,42 +2,42 @@
 <html>
 <head>
     <title>Freight Estimator</title>
-    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>Freight Cost Estimator</h1>
-    <form method="post">
-        <label for="shipment_type">Shipment Type:</label>
+    <h1>Freight Estimator</h1>
+    <form method="POST">
+        <label>Shipment Type:</label>
         <select name="shipment_type" required>
-            {% for t in types %}
-            <option value="{{ t }}">{{ t }}</option>
+            {% for type in shipment_types %}
+                <option value="{{ type }}">{{ type }}</option>
             {% endfor %}
-        </select>
+        </select><br><br>
 
-        <label for="origin">Origin:</label>
-        <select name="origin" required>
-            {% for o in origins %}
-            <option value="{{ o }}">{{ o }}</option>
-            {% endfor %}
-        </select>
+        <label>Origin (City):</label>
+        <input type="text" name="origin" required><br><br>
 
-        <label for="destination">Destination:</label>
+        <label>Destination:</label>
         <select name="destination" required>
-            {% for d in destinations %}
-            <option value="{{ d }}">{{ d }}</option>
+            {% for dest in known_destinations %}
+                <option value="{{ dest }}">{{ dest }}</option>
             {% endfor %}
-        </select>
+        </select><br><br>
 
         <button type="submit">Estimate</button>
     </form>
 
     {% if quote %}
-        <h2>Estimated Quote: ${{ quote }}</h2>
-    {% endif %}
-
-    {% if map_html %}
-        <div>{{ map_html|safe }}</div>
+        <h2>Result:</h2>
+        {% if quote.error %}
+            <p>{{ quote.error }}</p>
+        {% else %}
+            <p><strong>Origin:</strong> {{ quote.origin }}</p>
+            <p><strong>Destination:</strong> {{ quote.destination }}</p>
+            <p><strong>Shipment Type:</strong> {{ quote.shipment_type }}</p>
+            <p><strong>Estimated Cost:</strong> ${{ quote.quote }}</p>
+            <p><strong>Distance:</strong> {{ quote.distance }} miles</p>
+            {{ route_map|safe }}
+        {% endif %}
     {% endif %}
 </body>
 </html>
-
