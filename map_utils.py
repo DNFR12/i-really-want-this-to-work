@@ -1,21 +1,16 @@
 import folium
 
-def generate_map(origin_coords, dest_coords, shipment_type):
-    lat_center = (origin_coords[0] + dest_coords[0]) / 2
-    lon_center = (origin_coords[1] + dest_coords[1]) / 2
-    map_obj = folium.Map(location=[lat_center, lon_center], zoom_start=5)
-
-    folium.Marker(origin_coords, tooltip="Origin", icon=folium.Icon(color="green")).add_to(map_obj)
-    folium.Marker(dest_coords, tooltip="Destination", icon=folium.Icon(color="red")).add_to(map_obj)
+def create_route_map(shipment_type, origin_coords, dest_coords):
+    route_map = folium.Map(location=origin_coords, zoom_start=5)
 
     if shipment_type == "OTR Bulk":
-        folium.PolyLine([origin_coords, dest_coords], color="blue", weight=4).add_to(map_obj)
+        folium.PolyLine([origin_coords, dest_coords], color="blue", weight=5, tooltip="Road Route").add_to(route_map)
     elif shipment_type == "Iso Tank Bulk":
-        folium.PolyLine([origin_coords, dest_coords], color="orange", weight=3, dash_array='5,5').add_to(map_obj)
-    elif shipment_type == "Containers Freight":
-        folium.PolyLine([origin_coords, dest_coords], color="purple", weight=3).add_to(map_obj)
-    elif shipment_type == "LTL & FTL":
-        folium.PolyLine([origin_coords, dest_coords], color="gray", weight=2).add_to(map_obj)
+        folium.PolyLine([origin_coords, dest_coords], color="green", weight=5, tooltip="Rail Route").add_to(route_map)
+    elif shipment_type in ["Containers Freight", "LTL & FTL"]:
+        folium.PolyLine([origin_coords, dest_coords], color="purple", weight=3, dash_array="5, 10", tooltip="Ocean Route").add_to(route_map)
 
-    return map_obj._repr_html_()
+    folium.Marker(origin_coords, tooltip="Origin", icon=folium.Icon(color="green")).add_to(route_map)
+    folium.Marker(dest_coords, tooltip="Destination", icon=folium.Icon(color="red")).add_to(route_map)
 
+    return route_map
