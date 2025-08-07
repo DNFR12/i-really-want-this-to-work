@@ -1,1 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Freight Estimator</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Freight Cost Estimator</h1>
+    <form method="post">
+        <label for="shipment_type">Shipment Type:</label>
+        <select name="shipment_type" required>
+            {% for t in types %}
+            <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="origin">Origin:</label>
+        <select name="origin" required>
+            {% for o in origins %}
+            <option value="{{ o }}">{{ o }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="destination">Destination:</label>
+        <select name="destination" required>
+            {% for d in destinations %}
+            <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Estimate</button>
+    </form>
+
+    {% if quote %}
+        <h2>Estimated Quote: ${{ quote }}</h2>
+    {% endif %}
+
+    {% if map_html %}
+        <div>{{ map_html|safe }}</div>
+    {% endif %}
+</body>
+</html>
 
