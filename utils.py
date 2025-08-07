@@ -1,29 +1,35 @@
 import pandas as pd
-import os
 
-def clean_column(df, col):
-    if col in df.columns:
-        df[col] = df[col].replace('[\$,]', '', regex=True).replace("-", "0").astype(float)
-    return df
+def clean_and_combine_data(file_paths):
+    df_list = []
 
-def load_and_clean_data(folder_path):
-    combined_df = pd.DataFrame()
+    for path in file_paths:
+        df = pd.read_excel(path)
 
-    for file in os.listdir(folder_path):
-        if file.endswith(".xlsx"):
-            df = pd.read_excel(os.path.join(folder_path, file))
-            for col in ["LINEHAUL", "TANK WASH", "FUEL", "OTHER", "Demurrage", "TOTAL"]:
-                df = clean_column(df, col)
-            if "FUEL" in df.columns:
-                df["FUEL_PCT"] = df["FUEL"] / 100 if df["FUEL"].max() <= 1 else df["FUEL"]
-            combined_df = pd.concat([combined_df, df], ignore_index=True)
+        # Normalize headers
+        df.columns = [col.strip().title() for col in df.columns]
 
-    return combined_df
+        # Fix common typos in column headers
+        df.rename(columns={
+            'Orgin Latitude': 'Origin Latitude',
+        }, inplace=True)
 
-def filter_data_for_quote(data, shipment_type, origin, destination):
-    return data[
-        (data["Type"] == shipment_type) &
-        (data["Origin"] == origin) &
-        (data["Destination"] == destination)
-    ]
+        # Ensure all expected columns exist
+        expected_cols = [
+            'Origin', 'Destination', 'Linehaul', 'Tank Wash', 'Fuel', 'Other', 'Demurrage', 'Total',
+            'Origin Latitude', 'Origin Longitude', 'Destination Latitude', 'Destination Longitude'
+        ]
+        for col in expected_cols:
+            if col not in df.columns:
+                df[col] = None  # Add missing columns as empty
 
+        # Clean string and numeric columns
+        for col in df.select_dtypes(include='object'):
+            df[col] = df[col].astype(str).str.strip()
+        for col in ['Linehaul', 'Tank Wash', 'Fuel', 'Other', 'Demurrage', 'Total']:
+            df[col] = df[col].replace('[\$,]', '', regex=True).replace("-", "0").astype(float)
+
+        df_list.append(df)
+
+    combined = pd.concat(df_list, ignore_index=True)
+    return combined.fillna("")
