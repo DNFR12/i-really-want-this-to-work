@@ -1,35 +1,26 @@
 import pandas as pd
 
-def clean_and_combine_data(file_paths):
-    df_list = []
+def load_all_data():
+    files = {
+        "OTR Bulk": "data/otr_bulk.xlsx",
+        "Iso Tank Bulk": "data/iso_tank_bulk.xlsx",
+        "Containers Freight": "data/containers_freight.xlsx",
+        "LTL & FTL": "data/ltl_ftl.xlsx"
+    }
 
-    for path in file_paths:
+    all_data = []
+
+    for shipment_type, path in files.items():
         df = pd.read_excel(path)
+        df["Type"] = shipment_type
+        all_data.append(df)
 
-        # Normalize headers
-        df.columns = [col.strip().title() for col in df.columns]
+    return pd.concat(all_data, ignore_index=True)
 
-        # Fix common typos in column headers
-        df.rename(columns={
-            'Orgin Latitude': 'Origin Latitude',
-        }, inplace=True)
-
-        # Ensure all expected columns exist
-        expected_cols = [
-            'Origin', 'Destination', 'Linehaul', 'Tank Wash', 'Fuel', 'Other', 'Demurrage', 'Total',
-            'Origin Latitude', 'Origin Longitude', 'Destination Latitude', 'Destination Longitude'
-        ]
-        for col in expected_cols:
-            if col not in df.columns:
-                df[col] = None  # Add missing columns as empty
-
-        # Clean string and numeric columns
-        for col in df.select_dtypes(include='object'):
-            df[col] = df[col].astype(str).str.strip()
-        for col in ['Linehaul', 'Tank Wash', 'Fuel', 'Other', 'Demurrage', 'Total']:
-            df[col] = df[col].replace('[\$,]', '', regex=True).replace("-", "0").astype(float)
-
-        df_list.append(df)
-
-    combined = pd.concat(df_list, ignore_index=True)
-    return combined.fillna("")
+def clean_currency(value):
+    if isinstance(value, str):
+        value = value.replace("$", "").replace(",", "").replace("-", "0").strip()
+    try:
+        return float(value)
+    except:
+        return 0.0
