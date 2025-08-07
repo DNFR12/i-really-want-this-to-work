@@ -1,26 +1,24 @@
 import pandas as pd
+from geopy.distance import geodesic
 
-def load_all_data():
-    files = {
-        "OTR Bulk": "data/otr_bulk.xlsx",
-        "Iso Tank Bulk": "data/iso_tank_bulk.xlsx",
-        "Containers Freight": "data/containers_freight.xlsx",
-        "LTL & FTL": "data/ltl_ftl.xlsx"
+def load_data():
+    return {
+        "OTR Bulk": pd.read_excel("data/otr_bulk.xlsx"),
+        "Iso Tank Bulk": pd.read_excel("data/iso_tank_bulk.xlsx"),
+        "Containers Freight": pd.read_excel("data/containers_freight.xlsx"),
+        "LTL FTL": pd.read_excel("data/ltl_ftl.xlsx"),
     }
 
-    all_data = []
+def filter_data_for_quote(df, origin, destination):
+    return df[
+        (df['Origin'].str.strip().str.lower() == origin.strip().lower()) &
+        (df['Destination'].str.strip().str.lower() == destination.strip().lower())
+    ]
 
-    for shipment_type, path in files.items():
-        df = pd.read_excel(path)
-        df["Type"] = shipment_type
-        all_data.append(df)
-
-    return pd.concat(all_data, ignore_index=True)
-
-def clean_currency(value):
-    if isinstance(value, str):
-        value = value.replace("$", "").replace(",", "").replace("-", "0").strip()
-    try:
-        return float(value)
-    except:
-        return 0.0
+def calculate_distance(origin_city, destination_city):
+    from map_utils import geocode
+    orig_coords = geocode(origin_city)
+    dest_coords = geocode(destination_city)
+    if None in orig_coords or None in dest_coords:
+        return 0
+    return geodesic(orig_coords, dest_coords).miles
