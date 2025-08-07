@@ -1,1 +1,15 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 40px;
+    background-color: #f9f9f9;
+}
+form {
+    margin-bottom: 20px;
+}
+label {
+    margin-right: 10px;
+}
+select, button {
+    margin-right: 20px;
+}
 
