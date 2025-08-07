@@ -4,6 +4,8 @@ from map_utils import generate_map
 
 DATA = load_and_clean_data("data/")
 
+print("Loaded Columns:", DATA.columns.tolist())
+
 def get_types():
     return ["OTR Bulk", "Iso Tank Bulk", "Containers Freight", "LTL & FTL"]
 
