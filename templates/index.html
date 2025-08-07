@@ -2,42 +2,43 @@
 <html>
 <head>
     <title>Freight Estimator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <h1>Freight Estimator</h1>
     <form method="POST">
-        <label>Shipment Type:</label>
+        <label for="shipment_type">Shipment Type:</label>
         <select name="shipment_type" required>
             {% for type in shipment_types %}
                 <option value="{{ type }}">{{ type }}</option>
             {% endfor %}
         </select><br><br>
 
-        <label>Origin (City):</label>
-        <input type="text" name="origin" required><br><br>
+        <label for="origin">Origin (City):</label>
+        <select name="origin" required>
+            {% for city in origins %}
+                <option value="{{ city }}">{{ city }}</option>
+            {% endfor %}
+        </select><br><br>
 
-        <label>Destination:</label>
+        <label for="destination">Destination:</label>
         <select name="destination" required>
-            {% for dest in known_destinations %}
-                <option value="{{ dest }}">{{ dest }}</option>
+            {% for city in destinations %}
+                <option value="{{ city }}">{{ city }}</option>
             {% endfor %}
         </select><br><br>
 
         <button type="submit">Estimate</button>
     </form>
 
-    {% if quote %}
-        <h2>Result:</h2>
-        {% if quote.error %}
-            <p>{{ quote.error }}</p>
-        {% else %}
-            <p><strong>Origin:</strong> {{ quote.origin }}</p>
-            <p><strong>Destination:</strong> {{ quote.destination }}</p>
-            <p><strong>Shipment Type:</strong> {{ quote.shipment_type }}</p>
-            <p><strong>Estimated Cost:</strong> ${{ quote.quote }}</p>
-            <p><strong>Distance:</strong> {{ quote.distance }} miles</p>
-            {{ route_map|safe }}
-        {% endif %}
+    {% if quote_result %}
+        <h3>Result</h3>
+        <p>Estimated Average Total: ${{ quote_result.average_total }}</p>
+        <p>Distance (mi): {{ quote_result.distance_miles }}</p>
     {% endif %}
+
+    <div class="map-container">
+        {{ map_html|safe }}
+    </div>
 </body>
 </html>
