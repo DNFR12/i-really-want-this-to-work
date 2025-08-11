@@ -1,7 +1,6 @@
 import pandas as pd
 from utils import load_data, filter_data_for_quote, get_distance, STD
 
-# Load and keep in memory
 DATA = load_data()
 
 def get_shipment_types():
@@ -9,39 +8,31 @@ def get_shipment_types():
 
 def get_origins_for_type(shipment_type: str) -> list[str]:
     df = DATA.get(shipment_type)
-    if df is None:
-        return []
-    return sorted(df[STD["origin"]].dropna().unique().tolist())
+    return [] if df is None else sorted(df[STD["origin"]].dropna().unique().tolist())
 
 def get_destinations_for_type(shipment_type: str) -> list[str]:
     df = DATA.get(shipment_type)
-    if df is None:
-        return []
-    return sorted(df[STD["destination"]].dropna().unique().tolist())
-
-def get_unique_locations():
-    """If you want global (all types) dropdowns."""
-    origins, destinations = set(), set()
-    for df in DATA.values():
-        origins.update(df[STD["origin"]].dropna().unique())
-        destinations.update(df[STD["destination"]].dropna().unique())
-    return sorted(origins), sorted(destinations)
+    return [] if df is None else sorted(df[STD["destination"]].dropna().unique().tolist())
 
 def calculate_quote(shipment_type: str, origin: str, destination: str) -> dict | None:
     df = DATA.get(shipment_type)
     if df is None or df.empty:
-        return None
+        return {"error": "No data loaded for this type."}
 
     filt = filter_data_for_quote(df, origin, destination)
     if filt.empty:
-        return None
+        return {"error": "No quoted lane found for this selection."}
 
-    avg_total = round(filt[STD["total"]].mean(), 2)
-    # use first row’s coordinates for the map/distance
+    # Use only valid numeric totals
+    totals = pd.to_numeric(filt[STD["total"]], errors="coerce").dropna()
+    if totals.empty:
+        return {"error": "Can not Calculate"}  # per your fallback rule
+
+    avg_total = round(totals.mean(), 2)
     row = filt.iloc[0]
     dist = get_distance(row)
 
-    return {
+    payload = {
         "shipment_type": shipment_type,
         "origin": origin,
         "destination": destination,
@@ -50,3 +41,4 @@ def calculate_quote(shipment_type: str, origin: str, destination: str) -> dict |
         "origin_coords": (row[STD["olat"]], row[STD["olon"]]),
         "dest_coords": (row[STD["dlat"]], row[STD["dlon"]]),
     }
+    return payload
