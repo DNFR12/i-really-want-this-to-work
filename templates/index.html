@@ -5,7 +5,9 @@
   <title>Freight Estimator</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script>
-    function typeChanged() { document.getElementById('mainForm').submit(); }
+    function autoSubmit() {
+      document.getElementById('mainForm').submit();
+    }
   </script>
 </head>
 <body>
@@ -13,14 +15,14 @@
 
   <form id="mainForm" method="POST">
     <label>Shipment Type:</label>
-    <select name="shipment_type" onchange="typeChanged()">
+    <select name="shipment_type" onchange="autoSubmit()">
       {% for t in shipment_types %}
         <option value="{{ t }}" {% if t == selected_type %}selected{% endif %}>{{ t }}</option>
       {% endfor %}
     </select>
 
     <label>Origin:</label>
-    <select name="origin" required>
+    <select name="origin" onchange="autoSubmit()" required>
       {% for o in origins %}
         <option value="{{ o }}" {% if o == selected_origin %}selected{% endif %}>{{ o }}</option>
       {% endfor %}
@@ -28,9 +30,13 @@
 
     <label>Destination:</label>
     <select name="destination" required>
-      {% for d in destinations %}
-        <option value="{{ d }}" {% if d == selected_destination %}selected{% endif %}>{{ d }}</option>
-      {% endfor %}
+      {% if destinations|length == 0 %}
+        <option value="">-- no destinations for this origin --</option>
+      {% else %}
+        {% for d in destinations %}
+          <option value="{{ d }}" {% if d == selected_destination %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      {% endif %}
     </select>
 
     <button type="submit">Estimate</button>
