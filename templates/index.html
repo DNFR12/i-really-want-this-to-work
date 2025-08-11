@@ -1,44 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8" />
     <title>Freight Estimator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+      // when shipment type changes, auto-submit to refresh origin/destination lists
+      function typeChanged() {
+        document.getElementById('mainForm').submit();
+      }
+    </script>
 </head>
 <body>
-    <h1>Freight Estimator</h1>
-    <form method="POST">
-        <label for="shipment_type">Shipment Type:</label>
-        <select name="shipment_type" required>
-            {% for type in shipment_types %}
-                <option value="{{ type }}">{{ type }}</option>
-            {% endfor %}
-        </select><br><br>
+  <h1>Freight Estimator</h1>
 
-        <label for="origin">Origin (City):</label>
-        <select name="origin" required>
-            {% for city in origins %}
-                <option value="{{ city }}">{{ city }}</option>
-            {% endfor %}
-        </select><br><br>
+  <form id="mainForm" method="POST">
+    <label>Shipment Type:</label>
+    <select name="shipment_type" onchange="typeChanged()">
+      {% for t in shipment_types %}
+        <option value="{{ t }}" {% if t == selected_type %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
 
-        <label for="destination">Destination:</label>
-        <select name="destination" required>
-            {% for city in destinations %}
-                <option value="{{ city }}">{{ city }}</option>
-            {% endfor %}
-        </select><br><br>
+    <label>Origin:</label>
+    <select name="origin" required>
+      {% for o in origins %}
+        <option value="{{ o }}">{{ o }}</option>
+      {% endfor %}
+    </select>
 
-        <button type="submit">Estimate</button>
-    </form>
+    <label>Destination:</label>
+    <select name="destination" required>
+      {% for d in destinations %}
+        <option value="{{ d }}">{{ d }}</option>
+      {% endfor %}
+    </select>
 
-    {% if quote_result %}
-        <h3>Result</h3>
-        <p>Estimated Average Total: ${{ quote_result.average_total }}</p>
-        <p>Distance (mi): {{ quote_result.distance_miles }}</p>
-    {% endif %}
+    <button type="submit">Estimate</button>
+  </form>
 
-    <div class="map-container">
-        {{ map_html|safe }}
+  {% if quote %}
+    <div class="result">
+      <p><strong>Type:</strong> {{ quote.shipment_type }}</p>
+      <p><strong>Origin → Destination:</strong> {{ quote.origin }} → {{ quote.destination }}</p>
+      {% if quote.distance_miles %}<p><strong>Distance:</strong> {{ quote.distance_miles }} mi</p>{% endif %}
+      <p><strong>Average Total:</strong> ${{ '%.2f'|format(quote.average_total) }}</p>
     </div>
+  {% endif %}
+
+  <div class="map-container">
+    {{ map_html|safe }}
+  </div>
 </body>
 </html>
