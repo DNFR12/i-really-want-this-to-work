@@ -1,4 +1,5 @@
 import pandas as pd
+from geopy.distance import geodesic  # <-- needed for unknown-destination distance
 from utils import (
     load_data, filter_data_for_quote, get_distance, STD,
     geocode_city, get_origin_coords, average_per_mile
@@ -58,20 +59,20 @@ def calculate_quote(shipment_type: str, origin: str, destination: str | None, cu
     if not custom_city:
         return {"error": "Please provide a destination city or select a quoted lane."}
 
-    # geocode custom destination
     dest_coords = geocode_city(custom_city)
     if not dest_coords:
         return {"error": f"Could not geocode '{custom_city}'."}
 
-    # get origin coords from selected type & origin
     origin_coords = get_origin_coords(df, origin)
     if not origin_coords:
         return {"error": f"No coordinates for origin '{origin}' in {shipment_type}."}
 
-    # compute distance
-    dist = round(geodesic(origin_coords, dest_coords).miles, 2)
+    # Distance with guard
+    try:
+        dist = round(geodesic(origin_coords, dest_coords).miles, 2)
+    except Exception:
+        return {"error": "Can not Calculate"}
 
-    # avg $/mile from this shipment type
     per_mile = average_per_mile(df)
     if not per_mile:
         return {"error": "Can not Calculate"}
