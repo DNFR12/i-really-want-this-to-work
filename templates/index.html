@@ -5,16 +5,25 @@
   <title>Freight Estimator</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script>
-    function autoSubmit() { document.getElementById('mainForm').submit(); }
+    function autoSubmit(){ document.getElementById('mainForm').submit(); }
+    function toggleCustom() {
+      const cb = document.getElementById('use_custom');
+      const city = document.getElementById('custom_city');
+      const dest = document.getElementById('destination');
+      if (cb.checked) {
+        city.disabled = false; city.required = true;
+        dest.disabled = true;  dest.required = false;
+      } else {
+        city.disabled = true;  city.required = false;
+        dest.disabled = false; dest.required = true;
+      }
+    }
+    window.addEventListener('DOMContentLoaded', toggleCustom);
   </script>
 </head>
 <body>
-  <!-- Fullscreen map -->
-  <div class="map-wrap">
-    {{ map_html|safe }}
-  </div>
+  <div class="map-wrap">{{ map_html|safe }}</div>
 
-  <!-- Overlay control panel -->
   <div class="panel">
     <h1>Freight Estimator</h1>
     <form id="mainForm" method="POST">
@@ -37,8 +46,15 @@
       </div>
 
       <div class="row">
-        <label>Destination</label>
-        <select name="destination" required>
+        <label style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="use_custom" name="use_custom" onchange="toggleCustom()" {% if use_custom %}checked{% endif %}>
+          Use unknown destination
+        </label>
+      </div>
+
+      <div class="row">
+        <label>Destination (quoted lanes)</label>
+        <select id="destination" name="destination" {% if use_custom %}disabled{% endif %} {% if not use_custom %}required{% endif %}>
           {% if destinations|length == 0 %}
             <option value="">-- no destinations for this origin --</option>
           {% else %}
@@ -49,6 +65,11 @@
         </select>
       </div>
 
+      <div class="row">
+        <label>Unknown Destination City</label>
+        <input type="text" id="custom_city" name="custom_city" placeholder="e.g., Denver, CO" value="{{ custom_city }}" {% if not use_custom %}disabled{% endif %} {% if use_custom %}required{% endif %}>
+      </div>
+
       <button type="submit">Estimate</button>
     </form>
 
@@ -57,9 +78,10 @@
         {% if quote.error %}
           <p><strong>{{ quote.error }}</strong></p>
         {% else %}
-          <p><strong>{{ quote.shipment_type }}</strong></p>
+          <p><strong>{{ quote.shipment_type }}</strong> — {% if quote.mode == 'quoted' %}Quoted Lane{% else %}Estimated (per‑mile){% endif %}</p>
           <p>{{ quote.origin }} → {{ quote.destination }}</p>
           {% if quote.distance_miles %}<p>{{ quote.distance_miles }} mi</p>{% endif %}
+          {% if quote.mode == 'estimated' and quote.rate_per_mile %}<p>@ ${{ '%.4f'|format(quote.rate_per_mile) }} / mi</p>{% endif %}
           <p><strong>${{ '%.2f'|format(quote.average_total) }}</strong></p>
         {% endif %}
       </div>
