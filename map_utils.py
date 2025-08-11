@@ -1,31 +1,21 @@
 import folium
-from geopy.geocoders import Nominatim
 
-geolocator = Nominatim(user_agent="freight-app")
+def create_route_map_default():
+    # default USA-ish view
+    return folium.Map(location=[39.5, -98.35], zoom_start=4)
 
-def geocode(city):
-    location = geolocator.geocode(city)
-    return (location.latitude, location.longitude) if location else (None, None)
+def create_route_map_with_route(shipment_type, origin_coords, dest_coords):
+    m = create_route_map_default()
 
-def create_map(origin=None, destination=None, shipment_type=None):
-    # Default location: central U.S.
-    fmap = folium.Map(location=[39.5, -98.35], zoom_start=4)
+    color = {
+        "OTR Bulk": "blue",
+        "Iso Tank Bulk": "green",
+        "Containers Freight": "purple",
+        "LTL & FTL": "orange",
+    }.get(shipment_type, "gray")
 
-    if origin and destination:
-        orig_coords = geocode(origin)
-        dest_coords = geocode(destination)
+    folium.Marker(origin_coords, tooltip="Origin", icon=folium.Icon(color="green")).add_to(m)
+    folium.Marker(dest_coords, tooltip="Destination", icon=folium.Icon(color="red")).add_to(m)
+    folium.PolyLine([origin_coords, dest_coords], color=color, weight=4, dash_array=None if shipment_type=="OTR Bulk" else "8,6").add_to(m)
 
-        if orig_coords and dest_coords:
-            folium.Marker(orig_coords, tooltip='Origin: ' + origin).add_to(fmap)
-            folium.Marker(dest_coords, tooltip='Destination: ' + destination).add_to(fmap)
-
-            if shipment_type == "OTR Bulk":
-                folium.PolyLine([orig_coords, dest_coords], color='blue', weight=4).add_to(fmap)
-            elif shipment_type == "Iso Tank Bulk":
-                folium.PolyLine([orig_coords, dest_coords], color='green', weight=4, dash_array='10').add_to(fmap)
-            elif shipment_type == "Containers Freight":
-                folium.PolyLine([orig_coords, dest_coords], color='purple', weight=3, dash_array='1').add_to(fmap)
-            elif shipment_type == "LTL FTL":
-                folium.PolyLine([orig_coords, dest_coords], color='orange', weight=2, dash_array='5').add_to(fmap)
-
-    return fmap._repr_html_()
+    return m
