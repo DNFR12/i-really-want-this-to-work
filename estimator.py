@@ -1,7 +1,7 @@
 import pandas as pd
 from utils import load_data, filter_data_for_quote, get_distance, STD
 
-# Load once at startup
+# Load and normalize once
 DATA = load_data()
 
 def get_shipment_types():
@@ -13,11 +13,13 @@ def get_origins_for_type(shipment_type: str) -> list[str]:
         return []
     return sorted(df[STD["origin"]].dropna().unique().tolist())
 
-def get_destinations_for_type(shipment_type: str) -> list[str]:
+def get_destinations_for_type_origin(shipment_type: str, origin: str) -> list[str]:
     df = DATA.get(shipment_type)
-    if df is None or df.empty:
+    if df is None or df.empty or not origin:
         return []
-    return sorted(df[STD["destination"]].dropna().unique().tolist())
+    mask = df[STD["origin"]].astype(str).str.strip().str.lower().eq(origin.strip().lower())
+    dests = df.loc[mask, STD["destination"]].dropna().unique().tolist()
+    return sorted(dests)
 
 def calculate_quote(shipment_type: str, origin: str, destination: str) -> dict:
     df = DATA.get(shipment_type)
@@ -30,7 +32,7 @@ def calculate_quote(shipment_type: str, origin: str, destination: str) -> dict:
 
     totals = pd.to_numeric(filt[STD["total"]], errors="coerce").dropna()
     if totals.empty:
-        return {"error": "Can not Calculate"}  # your requested fallback
+        return {"error": "Can not Calculate"}  # required fallback
 
     avg_total = round(totals.mean(), 2)
     row = filt.iloc[0]
