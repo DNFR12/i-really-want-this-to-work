@@ -14,11 +14,10 @@ def index():
     shipment_types = get_shipment_types()
     selected_type = request.form.get("shipment_type") or (shipment_types[0] if shipment_types else "")
 
-    # filter origins by selected type
+    # Cascading dropdowns
     origins = get_origins_for_type(selected_type)
     selected_origin = request.form.get("origin") or (origins[0] if origins else "")
 
-    # filter destinations by selected type + selected origin
     destinations = get_destinations_for_type_origin(selected_type, selected_origin) if selected_origin else []
     selected_destination = request.form.get("destination") or (destinations[0] if destinations else "")
 
