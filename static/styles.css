@@ -1,7 +1,74 @@
-body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-h1 { margin-bottom: 16px; }
-form { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
-label { font-weight: 600; margin-right: 4px; }
-select, button { padding: 6px 10px; }
-.result { margin: 10px 0 0; padding: 10px 12px; background: #f3f6ff; border: 1px solid #dfe6ff; border-radius: 6px; width: fit-content; }
-.map-container { margin-top: 14px; }
+/* Fullscreen, no page scroll */
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Folium map container expands to full viewport */
+.map-wrap {
+  position: fixed;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
+}
+
+/* Overlay control panel */
+.panel {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 360px;
+  max-height: calc(100vh - 32px);
+  overflow: auto; /* panel scrolls if needed, page won’t */
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0 0 12px 0;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+}
+
+select, button {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  font-size: 14px;
+}
+
+button {
+  margin-top: 4px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(0.95);
+}
+
+.result {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f3f6ff;
+  border: 1px solid #dfe6ff;
+  border-radius: 8px;
+}
