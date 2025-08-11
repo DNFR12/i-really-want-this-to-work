@@ -5,58 +5,65 @@
   <title>Freight Estimator</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script>
-    function autoSubmit() {
-      document.getElementById('mainForm').submit();
-    }
+    function autoSubmit() { document.getElementById('mainForm').submit(); }
   </script>
 </head>
 <body>
-  <h1>Freight Estimator</h1>
-
-  <form id="mainForm" method="POST">
-    <label>Shipment Type:</label>
-    <select name="shipment_type" onchange="autoSubmit()">
-      {% for t in shipment_types %}
-        <option value="{{ t }}" {% if t == selected_type %}selected{% endif %}>{{ t }}</option>
-      {% endfor %}
-    </select>
-
-    <label>Origin:</label>
-    <select name="origin" onchange="autoSubmit()" required>
-      {% for o in origins %}
-        <option value="{{ o }}" {% if o == selected_origin %}selected{% endif %}>{{ o }}</option>
-      {% endfor %}
-    </select>
-
-    <label>Destination:</label>
-    <select name="destination" required>
-      {% if destinations|length == 0 %}
-        <option value="">-- no destinations for this origin --</option>
-      {% else %}
-        {% for d in destinations %}
-          <option value="{{ d }}" {% if d == selected_destination %}selected{% endif %}>{{ d }}</option>
-        {% endfor %}
-      {% endif %}
-    </select>
-
-    <button type="submit">Estimate</button>
-  </form>
-
-  {% if quote %}
-    <div class="result">
-      {% if quote.error %}
-        <p><strong>{{ quote.error }}</strong></p>
-      {% else %}
-        <p><strong>Type:</strong> {{ quote.shipment_type }}</p>
-        <p><strong>Origin → Destination:</strong> {{ quote.origin }} → {{ quote.destination }}</p>
-        {% if quote.distance_miles %}<p><strong>Distance:</strong> {{ quote.distance_miles }} mi</p>{% endif %}
-        <p><strong>Average Total:</strong> ${{ '%.2f'|format(quote.average_total) }}</p>
-      {% endif %}
-    </div>
-  {% endif %}
-
-  <div class="map-container">
+  <!-- Fullscreen map -->
+  <div class="map-wrap">
     {{ map_html|safe }}
+  </div>
+
+  <!-- Overlay control panel -->
+  <div class="panel">
+    <h1>Freight Estimator</h1>
+    <form id="mainForm" method="POST">
+      <div class="row">
+        <label>Shipment Type</label>
+        <select name="shipment_type" onchange="autoSubmit()">
+          {% for t in shipment_types %}
+            <option value="{{ t }}" {% if t == selected_type %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Origin</label>
+        <select name="origin" onchange="autoSubmit()" required>
+          {% for o in origins %}
+            <option value="{{ o }}" {% if o == selected_origin %}selected{% endif %}>{{ o }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Destination</label>
+        <select name="destination" required>
+          {% if destinations|length == 0 %}
+            <option value="">-- no destinations for this origin --</option>
+          {% else %}
+            {% for d in destinations %}
+              <option value="{{ d }}" {% if d == selected_destination %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+
+      <button type="submit">Estimate</button>
+    </form>
+
+    {% if quote %}
+      <div class="result">
+        {% if quote.error %}
+          <p><strong>{{ quote.error }}</strong></p>
+        {% else %}
+          <p><strong>{{ quote.shipment_type }}</strong></p>
+          <p>{{ quote.origin }} → {{ quote.destination }}</p>
+          {% if quote.distance_miles %}<p>{{ quote.distance_miles }} mi</p>{% endif %}
+          <p><strong>${{ '%.2f'|format(quote.average_total) }}</strong></p>
+        {% endif %}
+      </div>
+    {% endif %}
   </div>
 </body>
 </html>
