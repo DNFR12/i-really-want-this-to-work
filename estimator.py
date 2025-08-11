@@ -1,5 +1,5 @@
 import pandas as pd
-from geopy.distance import geodesic  # <-- needed for unknown-destination distance
+from geopy.distance import geodesic
 from utils import (
     load_data, filter_data_for_quote, get_distance, STD,
     geocode_city, get_origin_coords, average_per_mile
@@ -25,15 +25,11 @@ def get_destinations_for_type_origin(shipment_type: str, origin: str) -> list[st
     return sorted(dests)
 
 def calculate_quote(shipment_type: str, origin: str, destination: str | None, custom_city: str | None) -> dict:
-    """
-    If `destination` is provided (known lane), return quoted-lane average.
-    If not, but `custom_city` is provided, estimate by avg $/mile * distance.
-    """
     df = DATA.get(shipment_type)
     if df is None or df.empty:
         return {"error": "No data loaded for this type."}
 
-    # KNOWN LANE PATH
+    # KNOWN LANE (quoted)
     if destination:
         filt = filter_data_for_quote(df, origin, destination)
         if filt.empty:
@@ -55,7 +51,7 @@ def calculate_quote(shipment_type: str, origin: str, destination: str | None, cu
             "mode": "quoted",
         }
 
-    # UNKNOWN DESTINATION PATH (custom city)
+    # UNKNOWN DESTINATION (estimated)
     if not custom_city:
         return {"error": "Please provide a destination city or select a quoted lane."}
 
@@ -67,13 +63,13 @@ def calculate_quote(shipment_type: str, origin: str, destination: str | None, cu
     if not origin_coords:
         return {"error": f"No coordinates for origin '{origin}' in {shipment_type}."}
 
-    # Distance with guard
     try:
         dist = round(geodesic(origin_coords, dest_coords).miles, 2)
     except Exception:
         return {"error": "Can not Calculate"}
 
-    per_mile = average_per_mile(df)
+    # Trim the top 15% most expensive $/mi rows
+    per_mile = average_per_mile(df, trim_top_pct=0.15)
     if not per_mile:
         return {"error": "Can not Calculate"}
 
@@ -82,7 +78,7 @@ def calculate_quote(shipment_type: str, origin: str, destination: str | None, cu
     return {
         "shipment_type": shipment_type,
         "origin": origin,
-        "destination": custom_city,   # show city name for unknown
+        "destination": custom_city,
         "average_total": est_total,
         "distance_miles": dist,
         "origin_coords": origin_coords,
