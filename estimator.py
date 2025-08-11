@@ -5,6 +5,7 @@ from utils import (
     geocode_city, get_origin_coords, average_per_mile
 )
 
+# Load all data once (read from /data/*.xlsx on startup)
 DATA = load_data()
 
 def get_shipment_types():
@@ -25,6 +26,11 @@ def get_destinations_for_type_origin(shipment_type: str, origin: str) -> list[st
     return sorted(dests)
 
 def calculate_quote(shipment_type: str, origin: str, destination: str | None, custom_city: str | None) -> dict:
+    """
+    If `destination` is provided (known lane), return quoted-lane average.
+    Otherwise, if `custom_city` is provided, estimate by trimmed avg $/mile * distance.
+    Trimming excludes the top 15% most expensive $/mile rows for this shipment type.
+    """
     df = DATA.get(shipment_type)
     if df is None or df.empty:
         return {"error": "No data loaded for this type."}
