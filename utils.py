@@ -1,4 +1,4 @@
-\import pandas as pd
+import pandas as pd
 from geopy.distance import geodesic
 from geopy.geocoders import Nominatim
 
