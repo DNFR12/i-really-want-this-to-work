@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8" />
-    <title>Freight Estimator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script>
-      // when shipment type changes, auto-submit to refresh origin/destination lists
-      function typeChanged() {
-        document.getElementById('mainForm').submit();
-      }
-    </script>
+  <meta charset="UTF-8" />
+  <title>Freight Estimator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script>
+    function typeChanged() { document.getElementById('mainForm').submit(); }
+  </script>
 </head>
 <body>
   <h1>Freight Estimator</h1>
@@ -25,14 +22,14 @@
     <label>Origin:</label>
     <select name="origin" required>
       {% for o in origins %}
-        <option value="{{ o }}">{{ o }}</option>
+        <option value="{{ o }}" {% if o == selected_origin %}selected{% endif %}>{{ o }}</option>
       {% endfor %}
     </select>
 
     <label>Destination:</label>
     <select name="destination" required>
       {% for d in destinations %}
-        <option value="{{ d }}">{{ d }}</option>
+        <option value="{{ d }}" {% if d == selected_destination %}selected{% endif %}>{{ d }}</option>
       {% endfor %}
     </select>
 
@@ -41,10 +38,14 @@
 
   {% if quote %}
     <div class="result">
-      <p><strong>Type:</strong> {{ quote.shipment_type }}</p>
-      <p><strong>Origin → Destination:</strong> {{ quote.origin }} → {{ quote.destination }}</p>
-      {% if quote.distance_miles %}<p><strong>Distance:</strong> {{ quote.distance_miles }} mi</p>{% endif %}
-      <p><strong>Average Total:</strong> ${{ '%.2f'|format(quote.average_total) }}</p>
+      {% if quote.error %}
+        <p><strong>{{ quote.error }}</strong></p>
+      {% else %}
+        <p><strong>Type:</strong> {{ quote.shipment_type }}</p>
+        <p><strong>Origin → Destination:</strong> {{ quote.origin }} → {{ quote.destination }}</p>
+        {% if quote.distance_miles %}<p><strong>Distance:</strong> {{ quote.distance_miles }} mi</p>{% endif %}
+        <p><strong>Average Total:</strong> ${{ '%.2f'|format(quote.average_total) }}</p>
+      {% endif %}
     </div>
   {% endif %}
 
